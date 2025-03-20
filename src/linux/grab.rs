@@ -47,7 +47,7 @@ lazy_static::lazy_static! {
 const KEYPRESS_EVENT: i32 = 2;
 // It is ok to use unsafe mut here.
 static mut IS_GRABBING: bool = false;
-static mut GLOBAL_CALLBACK: Option<Box<dyn FnMut(Event) -> Option<Event>>> = None;
+static GLOBAL_CALLBACK: Mutex<Option<Box<dyn FnMut(Event) -> Option<Event> + Send>>> = Mutex::new(None);
 const GRAB_RECV: Token = Token(0);
 
 impl KeyboardGrabber {
@@ -367,7 +367,7 @@ pub fn is_grabbed() -> bool {
 
 pub fn start_grab_listen<T>(callback: T) -> Result<(), GrabError>
 where
-    T: FnMut(Event) -> Option<Event> + 'static,
+    T: FnMut(Event) -> Option<Event> + Send + 'static,
 {
     if is_grabbed() {
         return Ok(());
@@ -375,7 +375,10 @@ where
 
     unsafe {
         IS_GRABBING = true;
-        GLOBAL_CALLBACK = Some(Box::new(callback));
+    }
+    {
+        let mut cb = GLOBAL_CALLBACK.lock().unwrap();
+        *cb = Some(Box::new(callback));
     }
 
     start_grab_service()?;

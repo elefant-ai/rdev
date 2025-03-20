@@ -11,7 +11,7 @@ use winapi::{
     um::winuser::{CallNextHookEx, GetMessageA, HC_ACTION, PKBDLLHOOKSTRUCT, PMOUSEHOOKSTRUCT},
 };
 
-static mut GLOBAL_CALLBACK: Option<Box<dyn FnMut(Event)>> = None;
+static GLOBAL_CALLBACK: Mutex<Option<Box<dyn FnMut(Event) + Send>>> = Mutex::new(None);
 
 impl From<HookError> for ListenError {
     fn from(error: HookError) -> Self {
@@ -62,10 +62,14 @@ unsafe extern "system" fn raw_callback_keyboard(code: i32, param: usize, lpdata:
 
 pub fn listen<T>(callback: T) -> Result<(), ListenError>
 where
-    T: FnMut(Event) + 'static,
+    T: FnMut(Event) + Send + 'static,
 {
+    {
+        let mut cb = GLOBAL_CALLBACK.lock().unwrap();
+        *cb = Some(Box::new(callback));
+    }
     unsafe {
-        GLOBAL_CALLBACK = Some(Box::new(callback));
+        
         set_key_hook(raw_callback_keyboard)?;
         if !crate::keyboard_only() {
             set_mouse_hook(raw_callback_mouse)?;

@@ -11,17 +11,21 @@ use x11::xlib;
 use x11::xrecord;
 
 static mut RECORD_ALL_CLIENTS: c_ulong = xrecord::XRecordAllClients;
-static mut GLOBAL_CALLBACK: Option<Box<dyn FnMut(Event)>> = None;
+static GLOBAL_CALLBACK: Mutex<Option<Box<dyn FnMut(Event) + Send>>> = Mutex::new(None);
 
 pub fn listen<T>(callback: T) -> Result<(), ListenError>
 where
-    T: FnMut(Event) + 'static,
+    T: FnMut(Event) +Send+ 'static,
 {
     let keyboard = Keyboard::new().ok_or(ListenError::KeyboardError)?;
 
+    {
+        let mut cb = GLOBAL_CALLBACK.lock().unwrap();
+        *cb = Some(Box::new(callback));
+    }
     unsafe {
         KEYBOARD = Some(keyboard);
-        GLOBAL_CALLBACK = Some(Box::new(callback));
+        
         // Open displays
         let dpy_control = xlib::XOpenDisplay(null());
         if dpy_control.is_null() {

@@ -21,7 +21,7 @@ const MODIFIERS: i32 = 0;
 
 pub static mut IS_GRAB: bool = false;
 
-static mut GLOBAL_CALLBACK: Option<Box<dyn FnMut(Event) -> Option<Event>>> = None;
+static GLOBAL_CALLBACK: Mutex<Option<Box<dyn FnMut(Event) -> Option<Event> + Send>>> = Mutex::new(None);
 
 lazy_static::lazy_static! {
     pub static ref GRABED: Arc<Mutex<HashSet<RdevKey>>> = Arc::new(Mutex::new(HashSet::<RdevKey>::new()));
@@ -162,11 +162,14 @@ fn set_key_hook() {
 
 pub fn grab<T>(callback: T) -> Result<(), GrabError>
 where
-    T: FnMut(Event) -> Option<Event> + 'static,
+    T: FnMut(Event) -> Option<Event> +Send + 'static,
 {
-    unsafe {
-        GLOBAL_CALLBACK = Some(Box::new(callback));
-    }
+    
+        {
+            let mut cb = GLOBAL_CALLBACK.lock().unwrap();
+            *cb = Some(Box::new(callback));
+        }
+    
     #[cfg(target_os = "linux")]
     set_key_hook();
     Ok(())

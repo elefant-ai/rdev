@@ -410,7 +410,7 @@ pub use crate::windows::{set_event_popup, set_get_key_unicode};
 #[cfg(not(any(target_os = "android", target_os = "ios", target_os = "linux")))]
 pub fn grab<T>(callback: T) -> Result<(), GrabError>
 where
-    T: Fn(Event) -> Option<Event> + 'static,
+    T: Fn(Event) -> Option<Event> + Send + 'static,
 {
     _grab(callback)
 }

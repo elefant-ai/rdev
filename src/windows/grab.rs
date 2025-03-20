@@ -21,7 +21,7 @@ use winapi::{
     },
 };
 
-static mut GLOBAL_CALLBACK: Option<Box<dyn FnMut(Event) -> Option<Event>>> = None;
+static GLOBAL_CALLBACK: Mutex<Option<Box<dyn FnMut(Event) -> Option<Event> + Send>>> = Mutex::new(None);
 static mut GET_KEY_UNICODE: bool = true;
 
 lazy_static::lazy_static! {
@@ -106,7 +106,7 @@ impl From<HookError> for GrabError {
 
 fn do_hook<T>(callback: T) -> Result<(HHOOK, HHOOK), GrabError>
 where
-    T: FnMut(Event) -> Option<Event> + 'static,
+    T: FnMut(Event) -> Option<Event> + Send + 'static,
 {
     let mut cur_hook_thread_id = CUR_HOOK_THREAD_ID.lock().unwrap();
     if *cur_hook_thread_id != 0 {
@@ -116,8 +116,12 @@ where
 
     let hook_keyboard;
     let mut hook_mouse = null_mut();
+    {
+        let mut cb = GLOBAL_CALLBACK.lock().unwrap();
+        *cb = Some(Box::new(callback));
+    }
     unsafe {
-        GLOBAL_CALLBACK = Some(Box::new(callback));
+        
         hook_keyboard =
             SetWindowsHookExA(WH_KEYBOARD_LL, Some(raw_callback_keyboard), null_mut(), 0);
         if hook_keyboard.is_null() {
