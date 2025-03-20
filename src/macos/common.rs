@@ -218,7 +218,7 @@ pub unsafe fn convert(
                         None
                     } else {
                         let flags = cg_event.get_flags();
-                        
+
                         // if s.is_none() {
                         //     s = Some(key_to_name(_k).to_owned())
                         // }
