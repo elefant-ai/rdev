@@ -5,8 +5,9 @@ use cocoa::base::nil;
 use cocoa::foundation::NSAutoreleasePool;
 use core_graphics::event::{CGEventTapLocation, CGEventType};
 use std::os::raw::c_void;
+use std::sync::Mutex;
 
-static mut GLOBAL_CALLBACK: Option<Box<dyn FnMut(Event) -> Option<Event>>> = None;
+static GLOBAL_CALLBACK: Mutex<Option<Box<dyn FnMut(Event) -> Option<Event> + Send>>> = Mutex::new(None);
 
 unsafe extern "C" fn raw_callback(
     _proxy: CGEventTapProxy,
@@ -19,7 +20,7 @@ unsafe extern "C" fn raw_callback(
     if let Ok(mut state) = KEYBOARD_STATE.lock() {
         if let Some(keyboard) = state.as_mut() {
             if let Some(event) = convert(_type, &cg_event, keyboard) {
-                if let Some(callback) = &mut GLOBAL_CALLBACK {
+                if let Some(callback) = GLOBAL_CALLBACK.lock().unwrap().as_mut() {
                     if callback(event).is_none() {
                         cg_event.set_type(CGEventType::Null);
                     }
@@ -41,14 +42,17 @@ pub fn is_grabbed() -> bool {
 
 pub fn grab<T>(callback: T) -> Result<(), GrabError>
 where
-    T: FnMut(Event) -> Option<Event> + 'static,
+    T: FnMut(Event) -> Option<Event> + Send + 'static,
 {
     if is_grabbed() {
         return Ok(());
     }
 
     unsafe {
-        GLOBAL_CALLBACK = Some(Box::new(callback));
+        {
+            let mut cb = GLOBAL_CALLBACK.lock().unwrap();
+            *cb = Some(Box::new(callback));
+        }
         let _pool = NSAutoreleasePool::new(nil);
         let tap = CGEventTapCreate(
             CGEventTapLocation::Session, // HID, Session, AnnotatedSession,
