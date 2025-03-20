@@ -307,7 +307,7 @@ pub use crate::rdev::UnicodeInfo;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn listen<T>(callback: T) -> Result<(), ListenError>
 where
-    T: FnMut(Event) + 'static,
+    T: FnMut(Event) + Send + 'static,
 {
     _listen(callback)
 }
