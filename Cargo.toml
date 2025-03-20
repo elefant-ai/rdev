@@ -19,6 +19,7 @@ lazy_static = "1.4"
 serde = {version = "1", features = ["derive"], optional = true}
 strum = "0.27"
 strum_macros = "0.27"
+tracing = "0.1.41"
 widestring = "1.2"
 
 

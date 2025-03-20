@@ -102,6 +102,7 @@ fn test_macos_keys() {
 }
 
 #[cfg(windows)]
+#[allow(unused)]
 fn test_simulate_vk() {
     let _ = rdev::simulate_code(Some(0xA2), None, true);
     let _ = rdev::simulate_code(Some(0x4F), None, true);
