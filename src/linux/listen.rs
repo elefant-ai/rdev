@@ -1,6 +1,6 @@
 extern crate libc;
 extern crate x11;
-use crate::linux::common::{convert, FALSE, KEYBOARD};
+use crate::linux::common::{FALSE, KEYBOARD, convert};
 use crate::linux::keyboard::Keyboard;
 use crate::rdev::{Event, ListenError};
 use std::convert::TryInto;
@@ -15,7 +15,7 @@ static GLOBAL_CALLBACK: Mutex<Option<Box<dyn FnMut(Event) + Send>>> = Mutex::new
 
 pub fn listen<T>(callback: T) -> Result<(), ListenError>
 where
-    T: FnMut(Event) +Send+ 'static,
+    T: FnMut(Event) + Send + 'static,
 {
     let keyboard = Keyboard::new().ok_or(ListenError::KeyboardError)?;
 
@@ -25,7 +25,7 @@ where
     }
     unsafe {
         KEYBOARD = Some(keyboard);
-        
+
         // Open displays
         let dpy_control = xlib::XOpenDisplay(null());
         if dpy_control.is_null() {

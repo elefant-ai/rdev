@@ -1,5 +1,5 @@
-use crate::linux::common::{FALSE, TRUE};
 use crate::keycodes::linux::code_from_key;
+use crate::linux::common::{FALSE, TRUE};
 use crate::rdev::{Button, EventType, RawKey, SimulateError};
 use std::convert::TryInto;
 use std::os::raw::c_int;
@@ -76,11 +76,7 @@ unsafe fn send_native(event_type: &EventType, display: *mut xlib::Display) -> Op
                 & xtest::XTestFakeButtonEvent(display, code, FALSE, 0)
         }
     };
-    if res == 0 {
-        None
-    } else {
-        Some(())
-    }
+    if res == 0 { None } else { Some(()) }
 }
 
 pub fn simulate(event_type: &EventType) -> Result<(), SimulateError> {
@@ -125,11 +121,7 @@ unsafe fn send_native_char(chr: char, pressed: bool, display: *mut xlib::Display
         xtest::XTestFakeKeyEvent(display, keycode as _, FALSE, 0)
     };
 
-    if res == 0 {
-        None
-    } else {
-        Some(())
-    }
+    if res == 0 { None } else { Some(()) }
 }
 
 pub fn simulate_char(chr: char, pressed: bool) -> Result<(), SimulateError> {

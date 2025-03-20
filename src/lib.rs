@@ -238,6 +238,9 @@ pub use crate::codes_conv::*;
 pub use keycodes::android::{
     code_from_key as android_keycode_from_key, key_from_code as android_key_from_code,
 };
+pub use keycodes::chrome::{
+    code_from_key as chrome_keycode_from_key, key_from_code as chrome_key_from_code,
+};
 pub use keycodes::linux::{
     code_from_key as linux_keycode_from_key, key_from_code as linux_key_from_code,
 };
@@ -252,33 +255,30 @@ pub use keycodes::windows::{
     get_win_key, key_from_code as win_key_from_keycode, key_from_scancode as win_key_from_scancode,
     scancode_from_key as win_scancode_from_key,
 };
-pub use keycodes::chrome::{
-    code_from_key as chrome_keycode_from_key, key_from_code as chrome_key_from_code,
-};
 
 #[cfg(target_os = "macos")]
 pub use crate::keycodes::macos::{code_from_key, key_from_code, virtual_keycodes::*};
 #[cfg(target_os = "macos")]
-use crate::macos::{display_size as _display_size, listen as _listen, simulate as _simulate};
+pub use crate::macos::{Keyboard, VirtualInput, set_is_main_thread};
 #[cfg(target_os = "macos")]
-pub use crate::macos::{set_is_main_thread, Keyboard, VirtualInput};
+use crate::macos::{display_size as _display_size, listen as _listen, simulate as _simulate};
 #[cfg(target_os = "macos")]
 pub use core_graphics::{event::CGEventTapLocation, event_source::CGEventSourceStateID};
 
 #[cfg(any(target_os = "android", target_os = "linux"))]
 pub use crate::keycodes::linux::{code_from_key, key_from_code};
 #[cfg(target_os = "linux")]
-use crate::linux::{display_size as _display_size, listen as _listen, simulate as _simulate};
+pub use crate::linux::{Keyboard, simulate_char, simulate_unicode};
 #[cfg(target_os = "linux")]
-pub use crate::linux::{simulate_char, simulate_unicode, Keyboard};
+use crate::linux::{display_size as _display_size, listen as _listen, simulate as _simulate};
 
 #[cfg(target_os = "windows")]
 pub use crate::keycodes::windows::key_from_scancode;
 #[cfg(target_os = "windows")]
 pub use crate::windows::{
-    display_size as _display_size, get_modifier, listen as _listen, set_modifier,
+    Keyboard, display_size as _display_size, get_modifier, listen as _listen, set_modifier,
     simulate as _simulate, simulate_char, simulate_code, simulate_key_unicode, simulate_unicode,
-    simulate_unistr, vk_to_scancode, Keyboard,
+    simulate_unistr, vk_to_scancode,
 };
 
 pub use crate::rdev::UnicodeInfo;

@@ -1,5 +1,5 @@
 use crate::rdev::{EventType, Key, KeyboardState, UnicodeInfo};
-use crate::windows::common::{get_code, get_scan_code, FALSE, TRUE};
+use crate::windows::common::{FALSE, TRUE, get_code, get_scan_code};
 use std::collections::HashMap;
 use std::ptr::null_mut;
 use winapi::ctypes::c_int;

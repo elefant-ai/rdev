@@ -1,6 +1,6 @@
 use crate::{
     rdev::{Event, EventType, GrabError},
-    windows::common::{convert, get_scan_code, HookError, KEYBOARD},
+    windows::common::{HookError, KEYBOARD, convert, get_scan_code},
 };
 use std::{io::Error, ptr::null_mut, sync::Mutex, time::SystemTime};
 use winapi::{
@@ -14,14 +14,15 @@ use winapi::{
         errhandlingapi::GetLastError,
         processthreadsapi::GetCurrentThreadId,
         winuser::{
-            CallNextHookEx, DispatchMessageA, GetMessageA, PostThreadMessageA, SetWindowsHookExA,
-            TranslateMessage, UnhookWindowsHookEx, HC_ACTION, MSG, PKBDLLHOOKSTRUCT,
-            PMOUSEHOOKSTRUCT, WH_KEYBOARD_LL, WH_MOUSE_LL, WM_USER,
+            CallNextHookEx, DispatchMessageA, GetMessageA, HC_ACTION, MSG, PKBDLLHOOKSTRUCT,
+            PMOUSEHOOKSTRUCT, PostThreadMessageA, SetWindowsHookExA, TranslateMessage,
+            UnhookWindowsHookEx, WH_KEYBOARD_LL, WH_MOUSE_LL, WM_USER,
         },
     },
 };
 
-static GLOBAL_CALLBACK: Mutex<Option<Box<dyn FnMut(Event) -> Option<Event> + Send>>> = Mutex::new(None);
+static GLOBAL_CALLBACK: Mutex<Option<Box<dyn FnMut(Event) -> Option<Event> + Send>>> =
+    Mutex::new(None);
 static mut GET_KEY_UNICODE: bool = true;
 
 lazy_static::lazy_static! {
@@ -121,7 +122,6 @@ where
         *cb = Some(Box::new(callback));
     }
     unsafe {
-        
         hook_keyboard =
             SetWindowsHookExA(WH_KEYBOARD_LL, Some(raw_callback_keyboard), null_mut(), 0);
         if hook_keyboard.is_null() {

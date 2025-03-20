@@ -1,15 +1,15 @@
 use crate::rdev::UnicodeInfo;
 // This code is awful. Good luck
-use crate::{key_from_code, Event, EventType, GrabError, Keyboard, KeyboardState};
+use crate::{Event, EventType, GrabError, Keyboard, KeyboardState, key_from_code};
 use log::error;
-use mio::{unix::SourceFd, Events, Interest, Poll, Token};
+use mio::{Events, Interest, Poll, Token, unix::SourceFd};
 use std::{
     mem::zeroed,
     os::raw::c_int,
     ptr,
     sync::{
-        mpsc::{channel, Receiver, Sender},
         Arc, Mutex,
+        mpsc::{Receiver, Sender, channel},
     },
     thread,
     time::{Duration, SystemTime},
@@ -47,7 +47,8 @@ lazy_static::lazy_static! {
 const KEYPRESS_EVENT: i32 = 2;
 // It is ok to use unsafe mut here.
 static mut IS_GRABBING: bool = false;
-static GLOBAL_CALLBACK: Mutex<Option<Box<dyn FnMut(Event) -> Option<Event> + Send>>> = Mutex::new(None);
+static GLOBAL_CALLBACK: Mutex<Option<Box<dyn FnMut(Event) -> Option<Event> + Send>>> =
+    Mutex::new(None);
 const GRAB_RECV: Token = Token(0);
 
 impl KeyboardGrabber {
@@ -191,16 +192,18 @@ fn ungrab_keys_(display: *mut xlib::Display) {
 }
 
 fn start_callback_event_thread(recv: Receiver<GrabEvent>) {
-    thread::spawn(move || loop {
-        if let Ok(data) = recv.recv() {
-            match data {
-                GrabEvent::KeyEvent(event) => unsafe {
-                    if let Some(callback) = &mut GLOBAL_CALLBACK {
-                        callback(event);
+    thread::spawn(move || {
+        loop {
+            if let Ok(data) = recv.recv() {
+                match data {
+                    GrabEvent::KeyEvent(event) => unsafe {
+                        if let Some(callback) = &mut GLOBAL_CALLBACK {
+                            callback(event);
+                        }
+                    },
+                    GrabEvent::Exit => {
+                        break;
                     }
-                },
-                GrabEvent::Exit => {
-                    break;
                 }
             }
         }

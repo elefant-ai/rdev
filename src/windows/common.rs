@@ -1,6 +1,6 @@
+use crate::keycodes::windows::key_from_code;
 use crate::rdev::{Button, EventType, Key};
 use crate::windows::keyboard::Keyboard;
-use crate::keycodes::windows::key_from_code;
 use lazy_static::lazy_static;
 use std::convert::TryInto;
 use std::os::raw::{c_int, c_short};
@@ -11,9 +11,9 @@ use winapi::shared::ntdef::LONG;
 use winapi::shared::windef::HHOOK;
 use winapi::um::errhandlingapi::GetLastError;
 use winapi::um::winuser::{
-    GetForegroundWindow, GetKeyboardLayout, GetWindowThreadProcessId, MapVirtualKeyExW,
-    SetWindowsHookExA, KBDLLHOOKSTRUCT, MAPVK_VK_TO_VSC_EX, MSLLHOOKSTRUCT, VK_PACKET, WHEEL_DELTA,
-    WH_KEYBOARD_LL, WH_MOUSE_LL, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP,
+    GetForegroundWindow, GetKeyboardLayout, GetWindowThreadProcessId, KBDLLHOOKSTRUCT,
+    MAPVK_VK_TO_VSC_EX, MSLLHOOKSTRUCT, MapVirtualKeyExW, SetWindowsHookExA, VK_PACKET,
+    WH_KEYBOARD_LL, WH_MOUSE_LL, WHEEL_DELTA, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP,
     WM_MBUTTONDOWN, WM_MBUTTONUP, WM_MOUSEHWHEEL, WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_RBUTTONDOWN,
     WM_RBUTTONUP, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDOWN, WM_XBUTTONUP,
 };

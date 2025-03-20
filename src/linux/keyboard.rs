@@ -4,7 +4,7 @@ use crate::rdev::{EventType, KeyboardState, UnicodeInfo};
 use std::convert::TryInto;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_int, c_uint, c_ulong, c_void};
-use std::ptr::{null, null_mut, NonNull};
+use std::ptr::{NonNull, null, null_mut};
 use x11::xlib::{self, KeySym, XKeyEvent, XKeysymToString, XSupportsLocale};
 
 #[derive(Debug)]

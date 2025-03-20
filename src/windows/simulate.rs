@@ -1,6 +1,6 @@
-use crate::rdev::{Button, EventType, RawKey, SimulateError};
-use crate::keycodes::windows::{get_win_codes, scancode_from_key};
 use crate::Key;
+use crate::keycodes::windows::{get_win_codes, scancode_from_key};
+use crate::rdev::{Button, EventType, RawKey, SimulateError};
 use std::convert::TryFrom;
 use std::mem::size_of;
 use std::ptr::null_mut;
@@ -8,14 +8,14 @@ use winapi::ctypes::{c_int, c_short};
 use winapi::shared::minwindef::{DWORD, HKL, LOWORD, UINT, WORD};
 use winapi::shared::ntdef::LONG;
 use winapi::um::winuser::{
-    GetForegroundWindow, GetKeyboardLayout, GetSystemMetrics, GetWindowThreadProcessId, INPUT_u,
-    MapVirtualKeyExW, SendInput, VkKeyScanExW, INPUT, INPUT_KEYBOARD, INPUT_MOUSE, KEYBDINPUT,
-    KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, KEYEVENTF_SCANCODE, KEYEVENTF_UNICODE, MAPVK_VK_TO_VSC,
-    MAPVK_VSC_TO_VK_EX, MOUSEEVENTF_ABSOLUTE, MOUSEEVENTF_HWHEEL, MOUSEEVENTF_LEFTDOWN,
-    MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MOVE,
-    MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_VIRTUALDESK, MOUSEEVENTF_WHEEL,
-    MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, SM_CXVIRTUALSCREEN, SM_CYVIRTUALSCREEN,
-    WHEEL_DELTA,
+    GetForegroundWindow, GetKeyboardLayout, GetSystemMetrics, GetWindowThreadProcessId, INPUT,
+    INPUT_KEYBOARD, INPUT_MOUSE, INPUT_u, KEYBDINPUT, KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP,
+    KEYEVENTF_SCANCODE, KEYEVENTF_UNICODE, MAPVK_VK_TO_VSC, MAPVK_VSC_TO_VK_EX,
+    MOUSEEVENTF_ABSOLUTE, MOUSEEVENTF_HWHEEL, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP,
+    MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MOVE, MOUSEEVENTF_RIGHTDOWN,
+    MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_VIRTUALDESK, MOUSEEVENTF_WHEEL, MOUSEEVENTF_XDOWN,
+    MOUSEEVENTF_XUP, MOUSEINPUT, MapVirtualKeyExW, SM_CXVIRTUALSCREEN, SM_CYVIRTUALSCREEN,
+    SendInput, VkKeyScanExW, WHEEL_DELTA,
 };
 /// Not defined in win32 but define here for clarity
 #[allow(dead_code)]

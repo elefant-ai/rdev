@@ -14,22 +14,24 @@ unsafe extern "C" fn raw_callback(
     _type: CGEventType,
     cg_event: CGEventRef,
     _user_info: *mut c_void,
-) -> CGEventRef { unsafe {
-    // println!("Event ref {:?}", cg_event_ptr);
-    // let cg_event: CGEvent = transmute_copy::<*mut c_void, CGEvent>(&cg_event_ptr);
-    if let Ok(mut state) = KEYBOARD_STATE.lock() {
-        if let Some(keyboard) = state.as_mut() {
-            if let Some(event) = convert(_type, &cg_event, keyboard) {
-                if let Some(callback) =  GLOBAL_CALLBACK.lock().unwrap().as_mut() {
-                    callback(event);
+) -> CGEventRef {
+    unsafe {
+        // println!("Event ref {:?}", cg_event_ptr);
+        // let cg_event: CGEvent = transmute_copy::<*mut c_void, CGEvent>(&cg_event_ptr);
+        if let Ok(mut state) = KEYBOARD_STATE.lock() {
+            if let Some(keyboard) = state.as_mut() {
+                if let Some(event) = convert(_type, &cg_event, keyboard) {
+                    if let Some(callback) = GLOBAL_CALLBACK.lock().unwrap().as_mut() {
+                        callback(event);
+                    }
                 }
             }
         }
+        // println!("Event ref END {:?}", cg_event_ptr);
+        // cg_event_ptr
+        cg_event
     }
-    // println!("Event ref END {:?}", cg_event_ptr);
-    // cg_event_ptr
-    cg_event
-}}
+}
 
 pub fn listen<T>(callback: T) -> Result<(), ListenError>
 where

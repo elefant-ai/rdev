@@ -161,84 +161,86 @@ pub unsafe fn convert(
     _type: CGEventType,
     cg_event: &CGEvent,
     keyboard_state: &mut Keyboard,
-) -> Option<Event> { unsafe {
-    let mut code = 0;
-    let option_type = match _type {
-        CGEventType::LeftMouseDown => Some(EventType::ButtonPress(Button::Left)),
-        CGEventType::LeftMouseUp => Some(EventType::ButtonRelease(Button::Left)),
-        CGEventType::RightMouseDown => Some(EventType::ButtonPress(Button::Right)),
-        CGEventType::RightMouseUp => Some(EventType::ButtonRelease(Button::Right)),
-        CGEventType::MouseMoved => {
-            let point = cg_event.location();
-            Some(EventType::MouseMove {
-                x: point.x,
-                y: point.y,
-            })
-        }
-        CGEventType::KeyDown => {
-            code = get_code(cg_event)?;
-            Some(EventType::KeyPress(key_from_code(code)))
-        }
-        CGEventType::KeyUp => {
-            code = get_code(cg_event)?;
-            Some(EventType::KeyRelease(key_from_code(code)))
-        }
-        CGEventType::FlagsChanged => {
-            code = get_code(cg_event)?;
-            let flags = cg_event.get_flags();
-            if flags < LAST_FLAGS {
-                LAST_FLAGS = flags;
-                Some(EventType::KeyRelease(key_from_code(code)))
-            } else {
-                LAST_FLAGS = flags;
+) -> Option<Event> {
+    unsafe {
+        let mut code = 0;
+        let option_type = match _type {
+            CGEventType::LeftMouseDown => Some(EventType::ButtonPress(Button::Left)),
+            CGEventType::LeftMouseUp => Some(EventType::ButtonRelease(Button::Left)),
+            CGEventType::RightMouseDown => Some(EventType::ButtonPress(Button::Right)),
+            CGEventType::RightMouseUp => Some(EventType::ButtonRelease(Button::Right)),
+            CGEventType::MouseMoved => {
+                let point = cg_event.location();
+                Some(EventType::MouseMove {
+                    x: point.x,
+                    y: point.y,
+                })
+            }
+            CGEventType::KeyDown => {
+                code = get_code(cg_event)?;
                 Some(EventType::KeyPress(key_from_code(code)))
             }
-        }
-        CGEventType::ScrollWheel => {
-            let delta_y =
-                cg_event.get_integer_value_field(EventField::SCROLL_WHEEL_EVENT_POINT_DELTA_AXIS_1);
-            let delta_x =
-                cg_event.get_integer_value_field(EventField::SCROLL_WHEEL_EVENT_POINT_DELTA_AXIS_2);
-            Some(EventType::Wheel { delta_x, delta_y })
-        }
-        _ => None,
-    };
-    if let Some(event_type) = option_type {
-        let unicode = match event_type {
-            EventType::KeyPress(..) => {
-                let code =
-                    cg_event.get_integer_value_field(EventField::KEYBOARD_EVENT_KEYCODE) as u32;
-                #[allow(non_upper_case_globals)]
-                let skip_unicode = match code as CGKeyCode {
-                    kVK_Shift | kVK_RightShift | kVK_ForwardDelete => true,
-                    _ => false,
-                };
-                if skip_unicode {
-                    None
+            CGEventType::KeyUp => {
+                code = get_code(cg_event)?;
+                Some(EventType::KeyRelease(key_from_code(code)))
+            }
+            CGEventType::FlagsChanged => {
+                code = get_code(cg_event)?;
+                let flags = cg_event.get_flags();
+                if flags < LAST_FLAGS {
+                    LAST_FLAGS = flags;
+                    Some(EventType::KeyRelease(key_from_code(code)))
                 } else {
-                    let flags = cg_event.get_flags();
-                    let s = keyboard_state.create_unicode_for_key(code, flags);
-                    // if s.is_none() {
-                    //     s = Some(key_to_name(_k).to_owned())
-                    // }
-                    s
+                    LAST_FLAGS = flags;
+                    Some(EventType::KeyPress(key_from_code(code)))
                 }
             }
-            EventType::KeyRelease(..) => None,
+            CGEventType::ScrollWheel => {
+                let delta_y = cg_event
+                    .get_integer_value_field(EventField::SCROLL_WHEEL_EVENT_POINT_DELTA_AXIS_1);
+                let delta_x = cg_event
+                    .get_integer_value_field(EventField::SCROLL_WHEEL_EVENT_POINT_DELTA_AXIS_2);
+                Some(EventType::Wheel { delta_x, delta_y })
+            }
             _ => None,
         };
-        return Some(Event {
-            event_type,
-            time: SystemTime::now(),
-            unicode,
-            platform_code: code as _,
-            position_code: 0 as _,
-            usb_hid: 0,
-            extra_data: cg_event.get_integer_value_field(EventField::EVENT_SOURCE_USER_DATA),
-        });
+        if let Some(event_type) = option_type {
+            let unicode = match event_type {
+                EventType::KeyPress(..) => {
+                    let code =
+                        cg_event.get_integer_value_field(EventField::KEYBOARD_EVENT_KEYCODE) as u32;
+                    #[allow(non_upper_case_globals)]
+                    let skip_unicode = match code as CGKeyCode {
+                        kVK_Shift | kVK_RightShift | kVK_ForwardDelete => true,
+                        _ => false,
+                    };
+                    if skip_unicode {
+                        None
+                    } else {
+                        let flags = cg_event.get_flags();
+                        let s = keyboard_state.create_unicode_for_key(code, flags);
+                        // if s.is_none() {
+                        //     s = Some(key_to_name(_k).to_owned())
+                        // }
+                        s
+                    }
+                }
+                EventType::KeyRelease(..) => None,
+                _ => None,
+            };
+            return Some(Event {
+                event_type,
+                time: SystemTime::now(),
+                unicode,
+                platform_code: code as _,
+                position_code: 0 as _,
+                usb_hid: 0,
+                extra_data: cg_event.get_integer_value_field(EventField::EVENT_SOURCE_USER_DATA),
+            });
+        }
+        None
     }
-    None
-}}
+}
 
 #[allow(dead_code)]
 #[inline]

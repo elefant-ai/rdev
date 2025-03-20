@@ -65,99 +65,108 @@ fn workaround_fn(event: CGEvent, keycode: CGKeyCode) -> CGEvent {
 unsafe fn convert_native_with_source(
     event_type: &EventType,
     source: CGEventSource,
-) -> Option<CGEvent> { unsafe {
-    match event_type {
-        EventType::KeyPress(key) => match key {
-            crate::Key::RawKey(rawkey) => {
-                if let RawKey::MacVirtualKeycode(keycode) = rawkey {
-                    CGEvent::new_keyboard_event(source, *keycode as _, true)
+) -> Option<CGEvent> {
+    unsafe {
+        match event_type {
+            EventType::KeyPress(key) => match key {
+                crate::Key::RawKey(rawkey) => {
+                    if let RawKey::MacVirtualKeycode(keycode) = rawkey {
+                        CGEvent::new_keyboard_event(source, *keycode as _, true)
+                            // Don't use `workaround_fn()` for `KeyPress`, or `F11` will not work.
+                            // .and_then(|event| Ok(workaround_fn(event, *keycode)))
+                            .ok()
+                    } else {
+                        None
+                    }
+                }
+                _ => {
+                    let code = code_from_key(*key)?;
+                    CGEvent::new_keyboard_event(source, code as _, true)
                         // Don't use `workaround_fn()` for `KeyPress`, or `F11` will not work.
-                        // .and_then(|event| Ok(workaround_fn(event, *keycode)))
+                        // .and_then(|event| Ok(workaround_fn(event, code as _)))
                         .ok()
-                } else {
-                    None
                 }
-            }
-            _ => {
-                let code = code_from_key(*key)?;
-                CGEvent::new_keyboard_event(source, code as _, true)
-                    // Don't use `workaround_fn()` for `KeyPress`, or `F11` will not work.
-                    // .and_then(|event| Ok(workaround_fn(event, code as _)))
-                    .ok()
-            }
-        },
-        EventType::KeyRelease(key) => match key {
-            crate::Key::RawKey(rawkey) => {
-                if let RawKey::MacVirtualKeycode(keycode) = rawkey {
-                    CGEvent::new_keyboard_event(source, *keycode as _, false)
-                        .and_then(|event| Ok(workaround_fn(event, *keycode)))
+            },
+            EventType::KeyRelease(key) => match key {
+                crate::Key::RawKey(rawkey) => {
+                    if let RawKey::MacVirtualKeycode(keycode) = rawkey {
+                        CGEvent::new_keyboard_event(source, *keycode as _, false)
+                            .and_then(|event| Ok(workaround_fn(event, *keycode)))
+                            .ok()
+                    } else {
+                        None
+                    }
+                }
+                _ => {
+                    let code = code_from_key(*key)?;
+                    CGEvent::new_keyboard_event(source, code as _, false)
+                        .and_then(|event| Ok(workaround_fn(event, code as _)))
                         .ok()
-                } else {
-                    None
                 }
-            }
-            _ => {
-                let code = code_from_key(*key)?;
-                CGEvent::new_keyboard_event(source, code as _, false)
-                    .and_then(|event| Ok(workaround_fn(event, code as _)))
-                    .ok()
-            }
-        },
-        EventType::ButtonPress(button) => {
-            let point = get_current_mouse_location()?;
-            let event = match button {
-                Button::Left => CGEventType::LeftMouseDown,
-                Button::Right => CGEventType::RightMouseDown,
-                _ => return None,
-            };
-            CGEvent::new_mouse_event(
-                source,
-                event,
-                point,
-                CGMouseButton::Left, // ignored because we don't use OtherMouse EventType
-            )
-            .ok()
-        }
-        EventType::ButtonRelease(button) => {
-            let point = get_current_mouse_location()?;
-            let event = match button {
-                Button::Left => CGEventType::LeftMouseUp,
-                Button::Right => CGEventType::RightMouseUp,
-                _ => return None,
-            };
-            CGEvent::new_mouse_event(
-                source,
-                event,
-                point,
-                CGMouseButton::Left, // ignored because we don't use OtherMouse EventType
-            )
-            .ok()
-        }
-        EventType::MouseMove { x, y } => {
-            let point = CGPoint { x: (*x), y: (*y) };
-            CGEvent::new_mouse_event(source, CGEventType::MouseMoved, point, CGMouseButton::Left)
+            },
+            EventType::ButtonPress(button) => {
+                let point = get_current_mouse_location()?;
+                let event = match button {
+                    Button::Left => CGEventType::LeftMouseDown,
+                    Button::Right => CGEventType::RightMouseDown,
+                    _ => return None,
+                };
+                CGEvent::new_mouse_event(
+                    source,
+                    event,
+                    point,
+                    CGMouseButton::Left, // ignored because we don't use OtherMouse EventType
+                )
                 .ok()
-        }
-        EventType::Wheel { delta_x, delta_y } => {
-            let wheel_count = 2;
-            CGEvent::new_scroll_event(
-                source,
-                ScrollEventUnit::PIXEL,
-                wheel_count,
-                (*delta_y).try_into().ok()?,
-                (*delta_x).try_into().ok()?,
-                0,
-            )
-            .ok()
+            }
+            EventType::ButtonRelease(button) => {
+                let point = get_current_mouse_location()?;
+                let event = match button {
+                    Button::Left => CGEventType::LeftMouseUp,
+                    Button::Right => CGEventType::RightMouseUp,
+                    _ => return None,
+                };
+                CGEvent::new_mouse_event(
+                    source,
+                    event,
+                    point,
+                    CGMouseButton::Left, // ignored because we don't use OtherMouse EventType
+                )
+                .ok()
+            }
+            EventType::MouseMove { x, y } => {
+                let point = CGPoint { x: (*x), y: (*y) };
+                CGEvent::new_mouse_event(
+                    source,
+                    CGEventType::MouseMoved,
+                    point,
+                    CGMouseButton::Left,
+                )
+                .ok()
+            }
+            EventType::Wheel { delta_x, delta_y } => {
+                let wheel_count = 2;
+                CGEvent::new_scroll_event(
+                    source,
+                    ScrollEventUnit::PIXEL,
+                    wheel_count,
+                    (*delta_y).try_into().ok()?,
+                    (*delta_x).try_into().ok()?,
+                    0,
+                )
+                .ok()
+            }
         }
     }
-}}
+}
 
-unsafe fn convert_native(event_type: &EventType) -> Option<CGEvent> { unsafe {
-    // https://developer.apple.com/documentation/coregraphics/cgeventsourcestateid#:~:text=kCGEventSourceStatePrivate
-    let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState).ok()?;
-    convert_native_with_source(event_type, source)
-}}
+unsafe fn convert_native(event_type: &EventType) -> Option<CGEvent> {
+    unsafe {
+        // https://developer.apple.com/documentation/coregraphics/cgeventsourcestateid#:~:text=kCGEventSourceStatePrivate
+        let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState).ok()?;
+        convert_native_with_source(event_type, source)
+    }
+}
 
 unsafe fn get_current_mouse_location() -> Option<CGPoint> {
     let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState).ok()?;
@@ -167,13 +176,15 @@ unsafe fn get_current_mouse_location() -> Option<CGPoint> {
 
 pub fn simulate(event_type: &EventType) -> Result<(), SimulateError> {
     unsafe {
-        match convert_native(event_type) { Some(cg_event) => {
-            cg_event.set_integer_value_field(EventField::EVENT_SOURCE_USER_DATA, MOUSE_EXTRA_INFO);
-            cg_event.post(CGEventTapLocation::HID);
-            Ok(())
-        } _ => {
-            Err(SimulateError)
-        }}
+        match convert_native(event_type) {
+            Some(cg_event) => {
+                cg_event
+                    .set_integer_value_field(EventField::EVENT_SOURCE_USER_DATA, MOUSE_EXTRA_INFO);
+                cg_event.post(CGEventTapLocation::HID);
+                Ok(())
+            }
+            _ => Err(SimulateError),
+        }
     }
 }
 
@@ -192,12 +203,13 @@ impl VirtualInput {
 
     pub fn simulate(&self, event_type: &EventType) -> Result<(), SimulateError> {
         unsafe {
-            match convert_native_with_source(event_type, self.source.clone()) { Some(cg_event) => {
-                cg_event.post(self.tap_loc);
-                Ok(())
-            } _ => {
-                Err(SimulateError)
-            }}
+            match convert_native_with_source(event_type, self.source.clone()) {
+                Some(cg_event) => {
+                    cg_event.post(self.tap_loc);
+                    Ok(())
+                }
+                _ => Err(SimulateError),
+            }
         }
     }
 
