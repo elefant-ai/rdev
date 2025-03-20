@@ -39,8 +39,8 @@ fn main() {
     // TODO: Audit that the environment access only happens in single-threaded code.
     unsafe { std::env::set_var("KEYBOARD_ONLY", "y") };
 
-    let mut keyboard = KEYBOARD.lock().unwrap();
     let func = move |evt: Event| {
+        let mut keyboard = KEYBOARD.lock().unwrap();
         let (_key, _down) = match evt.event_type {
             KeyPress(k) => {
                 if MUTEX_SPECIAL_KEYS.lock().unwrap().contains_key(&k) {
