@@ -90,8 +90,7 @@ unsafe fn convert_native_with_source(
             EventType::KeyRelease(key) => match key {
                 crate::Key::RawKey(rawkey) => {
                     if let RawKey::MacVirtualKeycode(keycode) = rawkey {
-                        CGEvent::new_keyboard_event(source, *keycode as _, false)
-                            .and_then(|event| Ok(workaround_fn(event, *keycode)))
+                        CGEvent::new_keyboard_event(source, *keycode as _, false).map(|event| workaround_fn(event, *keycode))
                             .ok()
                     } else {
                         None
@@ -99,8 +98,7 @@ unsafe fn convert_native_with_source(
                 }
                 _ => {
                     let code = code_from_key(*key)?;
-                    CGEvent::new_keyboard_event(source, code as _, false)
-                        .and_then(|event| Ok(workaround_fn(event, code as _)))
+                    CGEvent::new_keyboard_event(source, code as _, false).map(|event| workaround_fn(event, code as _))
                         .ok()
                 }
             },

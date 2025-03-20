@@ -218,11 +218,11 @@ pub unsafe fn convert(
                         None
                     } else {
                         let flags = cg_event.get_flags();
-                        let s = keyboard_state.create_unicode_for_key(code, flags);
+                        
                         // if s.is_none() {
                         //     s = Some(key_to_name(_k).to_owned())
                         // }
-                        s
+                        keyboard_state.create_unicode_for_key(code, flags)
                     }
                 }
                 EventType::KeyRelease(..) => None,

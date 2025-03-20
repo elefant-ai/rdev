@@ -225,15 +225,12 @@ impl Keyboard {
 
             // C0 controls
             if length == 1 {
-                match String::from_utf16(&buff[..length].to_vec()) {
-                    Ok(s) => {
-                        if let Some(c) = s.chars().next() {
-                            if ('\u{1}'..='\u{1f}').contains(&c) {
-                                return None;
-                            }
+                if let Ok(s) = String::from_utf16(&buff[..length]) {
+                    if let Some(c) = s.chars().next() {
+                        if ('\u{1}'..='\u{1f}').contains(&c) {
+                            return None;
                         }
                     }
-                    Err(_) => {}
                 }
             }
 
