@@ -36,7 +36,8 @@ lazy_static::lazy_static! {
 
 fn main() {
     // This will block.
-    std::env::set_var("KEYBOARD_ONLY", "y");
+    // TODO: Audit that the environment access only happens in single-threaded code.
+    unsafe { std::env::set_var("KEYBOARD_ONLY", "y") };
 
     let mut keyboard = KEYBOARD.lock().unwrap();
     let func = move |evt: Event| {

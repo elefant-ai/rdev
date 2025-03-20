@@ -13,7 +13,7 @@ unsafe extern "C" fn raw_callback(
     _type: CGEventType,
     cg_event: CGEventRef,
     _user_info: *mut c_void,
-) -> CGEventRef {
+) -> CGEventRef { unsafe {
     // println!("Event ref {:?}", cg_event_ptr);
     // let cg_event: CGEvent = transmute_copy::<*mut c_void, CGEvent>(&cg_event_ptr);
     if let Ok(mut state) = KEYBOARD_STATE.lock() {
@@ -28,7 +28,7 @@ unsafe extern "C" fn raw_callback(
         }
     }
     cg_event
-}
+}}
 
 static mut CUR_LOOP: CFRunLoopSourceRef = std::ptr::null_mut();
 

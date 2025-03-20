@@ -74,7 +74,7 @@ pub const kCGEventMaskForAllEvents: u64 = (1 << CGEventType::LeftMouseDown as u6
 
 #[cfg(target_os = "macos")]
 #[link(name = "Cocoa", kind = "framework")]
-extern "C" {
+unsafe extern "C" {
     #[allow(improper_ctypes)]
     pub fn CGEventTapCreate(
         tap: CGEventTapLocation,
@@ -103,7 +103,7 @@ extern "C" {
 #[allow(improper_ctypes)]
 #[allow(non_snake_case)]
 #[link(name = "Carbon", kind = "framework")]
-extern "C" {
+unsafe extern "C" {
     pub fn LMGetKbdType() -> u8;
     pub fn KBGetLayoutType(iKeyboardType: SInt16) -> PhysicalKeyboardLayoutType;
 }
@@ -161,7 +161,7 @@ pub unsafe fn convert(
     _type: CGEventType,
     cg_event: &CGEvent,
     keyboard_state: &mut Keyboard,
-) -> Option<Event> {
+) -> Option<Event> { unsafe {
     let mut code = 0;
     let option_type = match _type {
         CGEventType::LeftMouseDown => Some(EventType::ButtonPress(Button::Left)),
@@ -238,7 +238,7 @@ pub unsafe fn convert(
         });
     }
     None
-}
+}}
 
 #[allow(dead_code)]
 #[inline]

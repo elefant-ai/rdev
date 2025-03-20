@@ -61,7 +61,7 @@ lazy_static::lazy_static! {
 #[cfg(target_os = "macos")]
 #[link(name = "Cocoa", kind = "framework")]
 #[link(name = "Carbon", kind = "framework")]
-extern "C" {
+unsafe extern "C" {
     fn TISCopyCurrentKeyboardInputSource() -> TISInputSourceRef;
     fn TISCopyCurrentKeyboardLayoutInputSource() -> TISInputSourceRef;
     fn TISCopyCurrentASCIICapableKeyboardLayoutInputSource() -> TISInputSourceRef;
@@ -124,7 +124,7 @@ impl Keyboard {
         &mut self,
         code: u32,
         flags: CGEventFlags,
-    ) -> Option<UnicodeInfo> {
+    ) -> Option<UnicodeInfo> { unsafe {
         let flags_bits = flags.bits();
         if flags_bits & NSEventModifierFlagCommand != 0
             || flags_bits & NSEventModifierFlagControl != 0
@@ -142,14 +142,14 @@ impl Keyboard {
                 self.unicode_from_code(code, modifier_state)
             })
         }
-    }
+    }}
 
     #[inline]
     unsafe fn unicode_from_code(
         &mut self,
         code: u32,
         modifier_state: ModifierState,
-    ) -> Option<UnicodeInfo> {
+    ) -> Option<UnicodeInfo> { unsafe {
         // let mut now = std::time::Instant::now();
         let mut keyboard = TISCopyCurrentKeyboardInputSource();
         let mut layout = std::ptr::null_mut();
@@ -240,7 +240,7 @@ impl Keyboard {
             unicode,
             is_dead: false,
         })
-    }
+    }}
 
     pub fn is_dead(&self) -> bool {
         self.dead_state != 0

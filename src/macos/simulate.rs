@@ -65,7 +65,7 @@ fn workaround_fn(event: CGEvent, keycode: CGKeyCode) -> CGEvent {
 unsafe fn convert_native_with_source(
     event_type: &EventType,
     source: CGEventSource,
-) -> Option<CGEvent> {
+) -> Option<CGEvent> { unsafe {
     match event_type {
         EventType::KeyPress(key) => match key {
             crate::Key::RawKey(rawkey) => {
@@ -151,13 +151,13 @@ unsafe fn convert_native_with_source(
             .ok()
         }
     }
-}
+}}
 
-unsafe fn convert_native(event_type: &EventType) -> Option<CGEvent> {
+unsafe fn convert_native(event_type: &EventType) -> Option<CGEvent> { unsafe {
     // https://developer.apple.com/documentation/coregraphics/cgeventsourcestateid#:~:text=kCGEventSourceStatePrivate
     let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState).ok()?;
     convert_native_with_source(event_type, source)
-}
+}}
 
 unsafe fn get_current_mouse_location() -> Option<CGPoint> {
     let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState).ok()?;
@@ -167,13 +167,13 @@ unsafe fn get_current_mouse_location() -> Option<CGPoint> {
 
 pub fn simulate(event_type: &EventType) -> Result<(), SimulateError> {
     unsafe {
-        if let Some(cg_event) = convert_native(event_type) {
+        match convert_native(event_type) { Some(cg_event) => {
             cg_event.set_integer_value_field(EventField::EVENT_SOURCE_USER_DATA, MOUSE_EXTRA_INFO);
             cg_event.post(CGEventTapLocation::HID);
             Ok(())
-        } else {
+        } _ => {
             Err(SimulateError)
-        }
+        }}
     }
 }
 
@@ -192,12 +192,12 @@ impl VirtualInput {
 
     pub fn simulate(&self, event_type: &EventType) -> Result<(), SimulateError> {
         unsafe {
-            if let Some(cg_event) = convert_native_with_source(event_type, self.source.clone()) {
+            match convert_native_with_source(event_type, self.source.clone()) { Some(cg_event) => {
                 cg_event.post(self.tap_loc);
                 Ok(())
-            } else {
+            } _ => {
                 Err(SimulateError)
-            }
+            }}
         }
     }
 
