@@ -16,6 +16,7 @@ macro_rules! decl_keycodes {
 
         //TODO: make const when rust lang issue #49146 is fixed
         #[allow(dead_code)]
+        #[allow(unreachable_patterns)]
         pub fn key_from_code(code: u32) -> Key {
             match code {
                 $(
